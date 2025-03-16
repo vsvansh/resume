@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Screening</title>
+    <!-- Bootstrap CSS (Replit Theme) -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <!-- Theme CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-file-alt me-2"></i>
+                AI Resume Screener
+            </a>
+            <div class="theme-switch-wrapper">
+                <label class="theme-switch" for="checkbox">
+                    <input type="checkbox" id="checkbox" />
+                    <div class="slider">
+                        <i class="fas fa-sun"></i>
+                        <i class="fas fa-moon"></i>
+                    </div>
+                </label>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container my-5">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-robot me-2"></i>Resume Match Analysis</h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead text-center mb-4">
+                            Upload your resume and enter a job description to see how well they match using AI-powered analysis
+                        </p>
+
+                        <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+                            <div class="mb-4">
+                                <label for="resume" class="form-label">
+                                    <i class="fas fa-file-upload me-2"></i>Upload Resume (PDF or TXT)
+                                </label>
+                                <input class="form-control" type="file" id="resume" name="resume" accept=".pdf,.txt" required>
+                                <div class="form-text">Maximum file size: 16MB</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="job_description" class="form-label">
+                                    <i class="fas fa-briefcase me-2"></i>Job Description
+                                </label>
+                                <textarea class="form-control" id="job_description" name="job_description" rows="6" placeholder="Paste the job description here..." required></textarea>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                    <span id="defaultText"><i class="fas fa-search me-2"></i>Analyze Match</span>
+                                    <span id="loadingText" class="d-none">
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        Analyzing...
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- How It Works Section -->
+                <div class="card shadow mt-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>How It Works</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3">
+                                    <i class="fas fa-upload fa-2x text-primary mb-3"></i>
+                                    <h5>Upload Resume</h5>
+                                    <p class="text-muted">Upload your resume in PDF or TXT format</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3">
+                                    <i class="fas fa-clipboard-list fa-2x text-primary mb-3"></i>
+                                    <h5>Add Job Description</h5>
+                                    <p class="text-muted">Paste the job description you want to match against</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="p-3">
+                                    <i class="fas fa-chart-pie fa-2x text-primary mb-3"></i>
+                                    <h5>Get Your Match Score</h5>
+                                    <p class="text-muted">See how well your resume matches the job requirements</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-4 bg-dark text-white mt-5">
+        <div class="container text-center">
+            <p class="mb-0">AI Resume Screener | Using TF-IDF Similarity Analysis</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <!-- Theme JS -->
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>
