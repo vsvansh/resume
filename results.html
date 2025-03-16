@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Match Results | AI Resume Screening</title>
+    <!-- Bootstrap CSS (Replit Theme) -->
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-file-alt me-2"></i>
+                AI Resume Screener
+            </a>
+            <div class="d-flex align-items-center">
+                <div class="theme-switch-wrapper me-3">
+                    <label class="theme-switch" for="checkbox">
+                        <input type="checkbox" id="checkbox" />
+                        <div class="slider">
+                            <i class="fas fa-sun"></i>
+                            <i class="fas fa-moon"></i>
+                        </div>
+                    </label>
+                </div>
+                <a href="/" class="btn btn-outline-light">
+                    <i class="fas fa-home me-2"></i>Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container my-5">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Resume Match Results</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-5">
+                                <div class="text-center mb-4">
+                                    <h2>Match Score</h2>
+                                    <div class="position-relative d-inline-block">
+                                        <canvas id="scoreChart" width="250" height="250"></canvas>
+                                        <div class="position-absolute top-50 start-50 translate-middle">
+                                            <h1 class="mb-0 score-display">{{ results.match_percentage }}%</h1>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        {% if results.match_percentage >= 80 %}
+                                            <div class="alert alert-success">
+                                                <i class="fas fa-check-circle me-2"></i>
+                                                <strong>Excellent match!</strong> Your resume is highly relevant for this position.
+                                            </div>
+                                        {% elif results.match_percentage >= 60 %}
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                <strong>Good match!</strong> Your resume matches many of the job requirements.
+                                            </div>
+                                        {% elif results.match_percentage >= 40 %}
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                <strong>Moderate match.</strong> Consider updating your resume to better align with this job.
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-danger">
+                                                <i class="fas fa-times-circle me-2"></i>
+                                                <strong>Low match.</strong> Your resume may need significant updates for this position.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <!-- Skills Analysis -->
+                                <div class="skills-section">
+                                    <h4><i class="fas fa-tools me-2"></i>Skills Analysis</h4>
+                                    
+                                    {% if results.job_skills %}
+                                    <div class="mb-3">
+                                        <h5>Skills Mentioned in Job Description:</h5>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            {% for skill in results.job_skills %}
+                                                <span class="badge bg-primary">{{ skill }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if results.resume_skills %}
+                                    <div class="mb-3">
+                                        <h5>Skills Found in Your Resume:</h5>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            {% for skill in results.resume_skills %}
+                                                <span class="badge bg-success">{{ skill }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if results.missing_skills %}
+                                    <div class="mb-3">
+                                        <h5>Missing Skills:</h5>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            {% for skill in results.missing_skills %}
+                                                <span class="badge bg-danger">{{ skill }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        <div class="alert alert-warning mt-2">
+                                            <i class="fas fa-lightbulb me-2"></i>
+                                            Consider adding these skills to your resume if you have experience with them.
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Personal Information Section -->
+                        <div class="personal-info-section mb-4">
+                            <h4 class="mb-3"><i class="fas fa-id-card me-2"></i>Candidate Profile</h4>
+                            <div class="card shadow-sm">
+                                <div class="card-header text-white" style="background-color: #4e73df !important;">
+                                    {% if results.personal_info and results.personal_info.name %}
+                                    <h5 class="m-0 fw-bold">{{ results.personal_info.name }}</h5>
+                                    {% else %}
+                                    <h5 class="m-0 fw-bold">Candidate Information</h5>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body bg-white">
+                                    {% if results.personal_info %}
+                                    <div class="row">
+                                        <div class="col-md-3 text-center mb-4 mb-md-0">
+                                            <div class="profile-icon-container mx-auto d-flex align-items-center justify-content-center">
+                                                <i class="fas fa-user-circle" style="font-size: 4rem; color: #4e73df;"></i>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <div class="row">
+                                                {% if results.personal_info.email is defined and results.personal_info.email %}
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-envelope me-2" style="color: #4e73df;"></i>
+                                                        <div>
+                                                            <h6 class="m-0 text-muted">Email</h6>
+                                                            <p class="m-0 fw-bold text-dark">{{ results.personal_info.email }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if results.personal_info.phone is defined and results.personal_info.phone %}
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-phone me-2" style="color: #4e73df;"></i>
+                                                        <div>
+                                                            <h6 class="m-0 text-muted">Phone</h6>
+                                                            <p class="m-0 fw-bold text-dark">{{ results.personal_info.phone }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if results.personal_info.location is defined and results.personal_info.location %}
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fas fa-map-marker-alt me-2" style="color: #4e73df;"></i>
+                                                        <div>
+                                                            <h6 class="m-0 text-muted">Location</h6>
+                                                            <p class="m-0 fw-bold text-dark">{{ results.personal_info.location }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if results.personal_info.linkedin is defined and results.personal_info.linkedin %}
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fab fa-linkedin me-2" style="color: #4e73df;"></i>
+                                                        <div>
+                                                            <h6 class="m-0 text-muted">LinkedIn</h6>
+                                                            <p class="m-0">
+                                                                <a href="{{ results.personal_info.linkedin }}" target="_blank" class="fw-bold text-decoration-none" style="color: #4e73df;">
+                                                                    <i class="fas fa-external-link-alt me-1"></i>View Profile
+                                                                </a>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if results.personal_info.github is defined and results.personal_info.github %}
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="fab fa-github me-2" style="color: #4e73df;"></i>
+                                                        <div>
+                                                            <h6 class="m-0 text-muted">GitHub</h6>
+                                                            <p class="m-0">
+                                                                <a href="{{ results.personal_info.github }}" target="_blank" class="fw-bold text-decoration-none" style="color: #4e73df;">
+                                                                    <i class="fas fa-external-link-alt me-1"></i>View Profile
+                                                                </a>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>No personal information found.</strong> This could be due to a formatting issue in the resume.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Resume Summary Section - Enhanced Visual Design -->
+                        <div class="resume-summary-section mb-4">
+                            <h4 class="mb-3"><i class="fas fa-file-alt me-2"></i>Resume Summary</h4>
+                            <div class="card shadow-sm bg-white">
+                                <div class="card-header text-white" style="background-color: #4e73df !important;">
+                                    <h5 class="mb-0 d-flex align-items-center">
+                                        <i class="fas fa-user-tie me-2"></i>Professional Profile
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if results.resume_summary %}
+                                    <div class="row">
+                                        <!-- Left column with profile highlights -->
+                                        <div class="col-md-4 border-end">
+                                            <div class="text-center mb-4">
+                                                <div class="display-4 mb-3">
+                                                    <i class="fas fa-chart-line" style="color: #4e73df;"></i>
+                                                </div>
+                                                
+                                                {% if results.resume_summary.years_experience is defined and results.resume_summary.years_experience %}
+                                                <div class="d-flex flex-column align-items-center mb-4">
+                                                    <span class="display-3 fw-bold" style="color: #4e73df;">{{ results.resume_summary.years_experience }}</span>
+                                                    <span class="text-dark">Years Experience</span>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if results.resume_summary.positions is defined and results.resume_summary.positions %}
+                                                <div class="position-highlights">
+                                                    <h6 class="border-bottom pb-2 text-center text-dark">Key Positions</h6>
+                                                    <ul class="list-unstyled">
+                                                        {% for position in results.resume_summary.positions %}
+                                                        <li class="mb-2">
+                                                            <span class="badge rounded-pill text-white" style="background-color: #4e73df;">{{ position|title }}</span>
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if results.resume_summary.degree is defined and results.resume_summary.degree %}
+                                                <div class="mt-4">
+                                                    <h6 class="border-bottom pb-2 text-center text-dark">Highest Education</h6>
+                                                    <p class="fw-bold mt-2 mb-0 text-dark">
+                                                        <span style="color: #4e73df;">{{ results.resume_summary.degree|title }}</span>
+                                                    </p>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Right column with details -->
+                                        <div class="col-md-8">
+                                            <!-- Experience Section -->
+                                            {% if results.resume_summary.experience is defined and results.resume_summary.experience %}
+                                            <div class="experience-section mb-4">
+                                                <h5 class="border-bottom pb-2 text-dark" style="border-color: #4e73df !important;">
+                                                    <i class="fas fa-briefcase me-2" style="color: #4e73df;"></i>Experience
+                                                </h5>
+                                                <ul class="list-group list-group-flush mt-3">
+                                                    {% for exp in results.resume_summary.experience %}
+                                                    <li class="list-group-item bg-transparent ps-0 text-dark">
+                                                        <i class="fas fa-angle-right me-2" style="color: #4e73df;"></i>
+                                                        {{ exp }}
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <!-- Education Section -->
+                                            {% if results.resume_summary.education is defined and results.resume_summary.education %}
+                                            <div class="education-section mb-4">
+                                                <h5 class="border-bottom pb-2 text-dark" style="border-color: #4e73df !important;">
+                                                    <i class="fas fa-graduation-cap me-2" style="color: #4e73df;"></i>Education
+                                                </h5>
+                                                <ul class="list-group list-group-flush mt-3">
+                                                    {% for edu in results.resume_summary.education %}
+                                                    <li class="list-group-item bg-transparent ps-0 text-dark">
+                                                        <i class="fas fa-angle-right me-2" style="color: #4e73df;"></i>
+                                                        {{ edu }}
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <!-- Skills Section -->
+                                            {% if results.resume_summary.skills is defined and results.resume_summary.skills %}
+                                            <div class="skills-section">
+                                                <h5 class="border-bottom pb-2 text-dark" style="border-color: #4e73df !important;">
+                                                    <i class="fas fa-tools me-2" style="color: #4e73df;"></i>Key Skills
+                                                </h5>
+                                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                                    {% for skill in results.resume_summary.skills %}
+                                                    <span class="badge rounded-pill bg-white text-dark border px-3 py-2" style="border-color: #4e73df !important;">
+                                                        <i class="fas fa-check-circle me-1" style="color: #4e73df;"></i>{{ skill }}
+                                                    </span>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <!-- Fallback general summary -->
+                                            {% if results.resume_summary.general is defined and results.resume_summary.general %}
+                                            <div class="alert alert-warning mt-3">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                {{ results.resume_summary.general }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>No detailed resume summary available.</strong> This could be due to a formatting issue in the resume or insufficient data.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Resume-Job Description Comparison -->
+                        <div class="resume-job-comparison mb-4">
+                            <h4 class="mb-3"><i class="fas fa-balance-scale me-2"></i>Resume-Job Description Comparison</h4>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="alert alert-secondary mb-4">
+                                                <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Comparison Summary</h5>
+                                                <p>Your resume matches <strong>{{ results.match_percentage }}%</strong> of the job description requirements.</p>
+                                                <hr>
+                                                {% if results.match_percentage >= 80 %}
+                                                    <p class="mb-0 text-success">Your resume is an excellent match for this position!</p>
+                                                {% elif results.match_percentage >= 60 %}
+                                                    <p class="mb-0 text-info">Your resume is a good match, but could use some minor improvements.</p>
+                                                {% elif results.match_percentage >= 40 %}
+                                                    <p class="mb-0 text-warning">Your resume is moderately aligned with the job description and needs improvement.</p>
+                                                {% else %}
+                                                    <p class="mb-0 text-danger">Your resume needs significant updates to align with this job description.</p>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            {% if results.missing_skills %}
+                                            <div class="mt-3 mb-4">
+                                                <h5 class="border-bottom pb-2">Key Skills Missing From Your Resume:</h5>
+                                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                                    {% for skill in results.missing_skills %}
+                                                        <span class="badge bg-danger fs-6 p-2">{{ skill }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                                <p class="text-muted mt-2"><small>Add these skills to your resume if you possess them to improve your match score.</small></p>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <div class="mt-3">
+                                                <h5 class="border-bottom pb-2">Key Matching Areas:</h5>
+                                                <ul class="list-group list-group-flush mt-2">
+                                                    {% for skill in results.resume_skills %}
+                                                        {% if skill in results.job_skills %}
+                                                        <li class="list-group-item bg-transparent">
+                                                            <i class="fas fa-check-circle text-success me-2"></i>
+                                                            <strong>{{ skill|capitalize }}</strong> is present in both your resume and the job description.
+                                                        </li>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Analysis -->
+                        <div class="detailed-analysis mt-4">
+                            <h4 class="mb-3"><i class="fas fa-search-plus me-2"></i>Detailed Analysis</h4>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-secondary text-white">
+                                            <h5 class="mb-0">Resume Preview</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="text-muted content-preview">{{ results.resume_text }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card mb-3">
+                                        <div class="card-header bg-secondary text-white">
+                                            <h5 class="mb-0">Job Description Preview</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="text-muted content-preview">{{ results.job_description }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Suggestions - Enhanced Visual Design -->
+                        {% if results.ai_suggestions %}
+                        <div class="ai-suggestions-section mt-4 mb-4">
+                            <h4 class="mb-3"><i class="fas fa-robot me-2"></i>AI-Generated Resume Suggestions</h4>
+                            <div class="card shadow-sm">
+                                <div class="card-header text-white" style="background-color: #1cc88a !important;">
+                                    <h5 class="mb-0 d-flex align-items-center">
+                                        <i class="fas fa-brain me-2"></i>Smart Improvement Recommendations
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-12">
+                                            <p class="lead">
+                                                <i class="fas fa-info-circle me-2 text-primary"></i>
+                                                Our AI has analyzed your resume and generated the following personalized suggestions to improve your match score.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        {% for suggestion in results.ai_suggestions %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100 bg-white border-0 shadow-sm">
+                                                <div class="card-body">
+                                                    <div class="d-flex">
+                                                        <div class="suggestion-icon me-3" style="color: #f6c23e;">
+                                                            <i class="fas fa-lightbulb fa-2x"></i>
+                                                        </div>
+                                                        <div class="suggestion-content">
+                                                            <p class="mb-0 text-dark fw-normal">{{ suggestion }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Recommendations - Enhanced Visual Design -->
+                        <div class="recommendations mt-4 mb-5">
+                            <h4 class="mb-3"><i class="fas fa-clipboard-check me-2"></i>General Recommendations</h4>
+                            <div class="card shadow-sm">
+                                <div class="card-header text-white" style="background-color: #36b9cc !important;">
+                                    <h5 class="mb-0 d-flex align-items-center">
+                                        <i class="fas fa-check-circle me-2"></i>Best Practices for Resume Success
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-12">
+                                            <div class="alert alert-light border">
+                                                <div class="d-flex">
+                                                    <div class="me-3">
+                                                        <i class="fas fa-info-circle text-primary fa-2x"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="alert-heading">Follow these general recommendations to improve your resume</h6>
+                                                        <p class="mb-0 text-muted">These tips are based on industry best practices and recruiter preferences.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100 bg-white" style="border-left: 4px solid #1cc88a;">
+                                                <div class="card-body">
+                                                    <h5 class="card-title fw-bold" style="color: #1cc88a;">
+                                                        <i class="fas fa-bullseye me-2"></i>Targeted Content
+                                                    </h5>
+                                                    <ul class="list-unstyled">
+                                                        {% if results.match_percentage < 70 %}
+                                                            <li class="mb-2">
+                                                                <i class="fas fa-check-circle me-2" style="color: #1cc88a;"></i>
+                                                                <span class="fw-semibold text-dark">Tailor your resume specifically to this job description to increase your match score.</span>
+                                                            </li>
+                                                        {% endif %}
+                                                        
+                                                        {% if results.missing_skills %}
+                                                            <li class="mb-2">
+                                                                <i class="fas fa-check-circle me-2" style="color: #1cc88a;"></i>
+                                                                <span class="fw-semibold text-dark">Add the missing skills that you possess to your resume.</span>
+                                                            </li>
+                                                        {% endif %}
+                                                        
+                                                        <li class="mb-2">
+                                                            <i class="fas fa-check-circle me-2" style="color: #1cc88a;"></i>
+                                                            <span class="fw-semibold text-dark">Use keywords from the job description in your resume where applicable.</span>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card h-100 bg-white" style="border-left: 4px solid #1cc88a;">
+                                                <div class="card-body">
+                                                    <h5 class="card-title fw-bold" style="color: #1cc88a;">
+                                                        <i class="fas fa-trophy me-2"></i>Achievements Focus
+                                                    </h5>
+                                                    <ul class="list-unstyled">
+                                                        <li class="mb-2">
+                                                            <i class="fas fa-check-circle me-2" style="color: #1cc88a;"></i>
+                                                            <span class="fw-semibold text-dark">Quantify your achievements with metrics and numbers to make them stand out.</span>
+                                                        </li>
+                                                        <li class="mb-2">
+                                                            <i class="fas fa-check-circle me-2" style="color: #1cc88a;"></i>
+                                                            <span class="fw-semibold text-dark">Highlight specific projects and results rather than just listing responsibilities.</span>
+                                                        </li>
+                                                        <li class="mb-2">
+                                                            <i class="fas fa-check-circle me-2" style="color: #1cc88a;"></i>
+                                                            <span class="fw-semibold text-dark">Keep your resume concise and focused on relevant experience for this position.</span>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <a href="/" class="btn btn-primary btn-lg">
+                                <i class="fas fa-redo me-2"></i>Analyze Another Resume
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-4 bg-dark text-white mt-5">
+        <div class="container text-center">
+            <p class="mb-0">AI Resume Screener | Using TF-IDF Similarity Analysis</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get match percentage from the data
+            const matchPercentage = {{ results.match_percentage }};
+            
+            // Create gauge chart
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            const scoreChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [matchPercentage, 100 - matchPercentage],
+                        backgroundColor: [
+                            getScoreColor(matchPercentage),
+                            'rgba(200, 200, 200, 0.2)'
+                        ],
+                        borderWidth: 0,
+                        cutout: '80%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
+                    }
+                }
+            });
+        });
+        
+        // Function to determine color based on score
+        function getScoreColor(score) {
+            if (score >= 80) return 'rgba(40, 167, 69, 0.8)';  // Green (success)
+            if (score >= 60) return 'rgba(23, 162, 184, 0.8)';  // Blue (info)
+            if (score >= 40) return 'rgba(255, 193, 7, 0.8)';  // Yellow (warning)
+            return 'rgba(220, 53, 69, 0.8)';  // Red (danger)
+        }
+    </script>
+</body>
+</html>
