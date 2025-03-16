@@ -1,0 +1,232 @@
+/* Custom styles to enhance the Bootstrap theme */
+
+/* Global Styles */
+body {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+main {
+    padding-bottom: 3rem;
+}
+
+/* Card Enhancements */
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border: none;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    border-bottom: none;
+    padding: 1rem 1.25rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Border Left Cards */
+.border-left-success {
+    border-left: 4px solid #28a745;
+}
+
+.border-left-info {
+    border-left: 4px solid #17a2b8;
+}
+
+.border-left-warning {
+    border-left: 4px solid #ffc107;
+}
+
+.border-left-danger {
+    border-left: 4px solid #dc3545;
+}
+
+/* Score display */
+.score-display {
+    font-size: 3.5rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Content previews */
+.content-preview {
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-line;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Skills badges */
+.badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 50rem;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* Improve spacing in lists */
+.list-group-item {
+    padding: 1rem;
+    border-left: none;
+    border-right: none;
+    transition: background-color 0.2s ease;
+}
+
+.list-group-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Button Enhancements */
+.btn {
+    cursor: pointer;
+    border-radius: 50rem;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-lg {
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+}
+
+/* Spinner animation */
+@keyframes spinner {
+    to {transform: rotate(360deg);}
+}
+
+/* Resume Summary Section */
+.resume-summary-section .card-header {
+    position: relative;
+    overflow: hidden;
+}
+
+.resume-summary-section .card-header::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%, 
+                     transparent 50%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.1) 75%, 
+                     transparent 75%, transparent);
+    background-size: 5rem 5rem;
+    z-index: 1;
+    opacity: 0.2;
+}
+
+/* Icons with animations */
+.fa-lightbulb {
+    animation: pulse 2s infinite;
+}
+
+.fa-chart-line {
+    animation: slideIn 1s ease;
+}
+
+/* Professional Profile styling */
+.profile-icon-container {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4ecfb 100%);
+    margin: 0 auto 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.profile-icon-container:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.2);
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Navigation bar styling */
+.navbar {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Footer styling */
+footer {
+    background: linear-gradient(90deg, #343a40 0%, #212529 100%);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
